@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ImagePicker with Compression</string>
+    <string name="permission_not_granted">Permissions not grated</string>
 </resources>
