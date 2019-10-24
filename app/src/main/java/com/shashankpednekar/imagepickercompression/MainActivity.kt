@@ -9,9 +9,14 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Parcelable
 import android.provider.MediaStore
+import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.*
 import java.io.File
 import java.util.ArrayList
 
@@ -19,6 +24,8 @@ private const val REQ_CAPTURE = 100
 private const val RES_IMAGE = 100
 
 class MainActivity : ParentActivity(R.layout.activity_main) {
+    private var queryImageUrl: String = ""
+    private val tag = javaClass.simpleName
     private var imgPath: String = ""
     private var imageUri: Uri? = null
     private val permissions = arrayOf(
@@ -63,7 +70,7 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         when (requestCode) {
             RES_IMAGE -> {
                 if (resultCode == Activity.RESULT_OK) {
-
+                    handleImageRequest(data)
                 }
             }
         }
@@ -141,4 +148,49 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         }
         return list
     }
+
+    private fun handleImageRequest(data: Intent?) {
+        val exceptionHandler = CoroutineExceptionHandler { _, t ->
+            t.printStackTrace()
+            progressBar.visibility = View.GONE
+            Toast.makeText(
+                this,
+                t.localizedMessage ?: getString(R.string.some_err),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
+            progressBar.visibility = View.VISIBLE
+
+            val file = File(imageUri?.path ?: "")
+            val size = withContext(Dispatchers.IO) {
+                delay(1000)
+                file.length()
+            }
+            Log.d(tag, "Image File length $size")
+            if (data?.data != null) {     //Photo from gallery
+                imageUri = data.data
+                queryImageUrl = imageUri?.path!!
+                queryImageUrl = compressImageFile(queryImageUrl, false, imageUri!!)
+            } else {
+                queryImageUrl = imgPath ?: ""
+                compressImageFile(queryImageUrl, uri = imageUri!!)
+            }
+            imageUri = Uri.fromFile(File(queryImageUrl))
+
+            if (queryImageUrl.isNotEmpty()) {
+
+                Glide.with(this@MainActivity)
+                    .asBitmap()
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .load(queryImageUrl)
+                    .into(iv_img)
+            }
+            progressBar.visibility = View.GONE
+        }
+
+    }
+
 }

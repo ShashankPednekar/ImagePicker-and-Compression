@@ -3,4 +3,5 @@
     <string name="app_name">ImagePicker with Compression</string>
     <string name="permission_not_granted">Permissions not grated</string>
     <string name="select_capture_image">Please select or capture image</string>
+    <string name="some_err">Some error occured, please try again later.</string>
 </resources>
