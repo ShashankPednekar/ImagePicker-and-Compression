@@ -28,11 +28,7 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
     private val tag = javaClass.simpleName
     private var imgPath: String = ""
     private var imageUri: Uri? = null
-    private val permissions = arrayOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.CAMERA
-    )
+    private val permissions = arrayOf(Manifest.permission.CAMERA)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
