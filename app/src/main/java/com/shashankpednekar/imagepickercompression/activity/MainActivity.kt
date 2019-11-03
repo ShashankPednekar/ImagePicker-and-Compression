@@ -113,7 +113,7 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         val folder = File("${getExternalFilesDir(Environment.DIRECTORY_DCIM)}")
         folder.mkdirs()
 
-        val file = File(folder, "Image_Tmp.png")
+        val file = File(folder, "Image_Tmp.jpg")
         if (file.exists())
             file.delete()
         file.createNewFile()
