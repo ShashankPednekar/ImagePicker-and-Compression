@@ -1,4 +1,4 @@
-package com.shashankpednekar.imagepickercompression
+package com.shashankpednekar.imagepickercompression.activity
 
 import android.Manifest
 import android.app.Activity
@@ -15,6 +15,10 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.shashankpednekar.imagepickercompression.BuildConfig
+import com.shashankpednekar.imagepickercompression.ParentActivity
+import com.shashankpednekar.imagepickercompression.R
+import com.shashankpednekar.imagepickercompression.utils.compressImageFile
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import java.io.File

@@ -1,4 +1,4 @@
-package com.shashankpednekar.imagepickercompression
+package com.shashankpednekar.imagepickercompression.utils
 
 import android.app.Activity
 import android.content.Context

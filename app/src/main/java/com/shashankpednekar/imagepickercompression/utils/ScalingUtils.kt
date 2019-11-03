@@ -1,4 +1,4 @@
-package com.shashankpednekar.imagepickercompression
+package com.shashankpednekar.imagepickercompression.utils
 
 import android.content.Context
 import android.content.res.Resources
@@ -18,25 +18,44 @@ import java.io.File
  * @param scalingLogic Logic to use to avoid image stretching
  * @return Decoded bitmap
  */
-fun decodeResource(res: Resources, resId: Int, dstWidth: Int, dstHeight: Int,
-                   scalingLogic: ScalingLogic): Bitmap {
+fun decodeResource(
+    res: Resources,
+    resId: Int,
+    dstWidth: Int,
+    dstHeight: Int,
+    scalingLogic: ScalingLogic
+): Bitmap {
     val options = BitmapFactory.Options()
     options.inJustDecodeBounds = true
     BitmapFactory.decodeResource(res, resId, options)
     options.inJustDecodeBounds = false
-    options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, dstWidth,
-            dstHeight, scalingLogic)
+    options.inSampleSize = calculateSampleSize(
+        options.outWidth, options.outHeight, dstWidth,
+        dstHeight, scalingLogic
+    )
 
     return BitmapFactory.decodeResource(res, resId, options)
 }
 
-fun decodeFile(context: Context, uri: Uri, dstWidth: Int, dstHeight: Int, scalingLogic: ScalingLogic): Bitmap? {
+fun decodeFile(
+    context: Context,
+    uri: Uri,
+    dstWidth: Int,
+    dstHeight: Int,
+    scalingLogic: ScalingLogic
+): Bitmap? {
     val options = BitmapFactory.Options()
     options.inJustDecodeBounds = true
     context.getBitmapFromUri(uri, options)
     options.inJustDecodeBounds = false
 
-    options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, dstWidth, dstHeight, scalingLogic)
+    options.inSampleSize = calculateSampleSize(
+        options.outWidth,
+        options.outHeight,
+        dstWidth,
+        dstHeight,
+        scalingLogic
+    )
 
     return context.getBitmapFromUri(uri, options)
 }
@@ -50,14 +69,23 @@ fun decodeFile(context: Context, uri: Uri, dstWidth: Int, dstHeight: Int, scalin
  * @param scalingLogic Logic to use to avoid image stretching
  * @return New scaled bitmap object
  */
-fun createScaledBitmap(unscaledBitmap: Bitmap, dstWidth: Int, dstHeight: Int,
-                       scalingLogic: ScalingLogic): Bitmap {
-    val srcRect = calculateSrcRect(unscaledBitmap.width, unscaledBitmap.height,
-            dstWidth, dstHeight, scalingLogic)
-    val dstRect = calculateDstRect(unscaledBitmap.width, unscaledBitmap.height,
-            dstWidth, dstHeight, scalingLogic)
-    val scaledBitmap = Bitmap.createBitmap(dstRect.width(), dstRect.height(),
-            Bitmap.Config.ARGB_8888)
+fun createScaledBitmap(
+    unscaledBitmap: Bitmap, dstWidth: Int, dstHeight: Int,
+    scalingLogic: ScalingLogic
+): Bitmap {
+    val srcRect = calculateSrcRect(
+        unscaledBitmap.width, unscaledBitmap.height,
+        dstWidth, dstHeight, scalingLogic
+    )
+    val dstRect = calculateDstRect(
+        unscaledBitmap.width,
+        unscaledBitmap.height,
+        dstWidth,
+        dstHeight,
+        scalingLogic
+    )
+    val scaledBitmap =
+        Bitmap.createBitmap(dstRect.width(), dstRect.height(), Bitmap.Config.ARGB_8888)
     val canvas = Canvas(scaledBitmap)
     canvas.drawBitmap(unscaledBitmap, srcRect, dstRect, Paint(Paint.FILTER_BITMAP_FLAG))
 
@@ -92,8 +120,10 @@ enum class ScalingLogic {
  * @param scalingLogic Logic to use to avoid image stretching
  * @return Optimal down scaling sample size for decoding
  */
-fun calculateSampleSize(srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int,
-                        scalingLogic: ScalingLogic): Int {
+fun calculateSampleSize(
+    srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int,
+    scalingLogic: ScalingLogic
+): Int {
     if (scalingLogic == ScalingLogic.FIT) {
         val srcAspect = srcWidth.toFloat() / srcHeight.toFloat()
         val dstAspect = dstWidth.toFloat() / dstHeight.toFloat()
@@ -125,8 +155,10 @@ fun calculateSampleSize(srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight:
  * @param scalingLogic Logic to use to avoid image stretching
  * @return Optimal source rectangle
  */
-fun calculateSrcRect(srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int,
-                     scalingLogic: ScalingLogic): Rect {
+fun calculateSrcRect(
+    srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int,
+    scalingLogic: ScalingLogic
+): Rect {
     if (scalingLogic == ScalingLogic.CROP) {
         val srcAspect = srcWidth.toFloat() / srcHeight.toFloat()
         val dstAspect = dstWidth.toFloat() / dstHeight.toFloat()
@@ -155,8 +187,10 @@ fun calculateSrcRect(srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: In
  * @param scalingLogic Logic to use to avoid image stretching
  * @return Optimal destination rectangle
  */
-fun calculateDstRect(srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int,
-                     scalingLogic: ScalingLogic): Rect {
+fun calculateDstRect(
+    srcWidth: Int, srcHeight: Int, dstWidth: Int, dstHeight: Int,
+    scalingLogic: ScalingLogic
+): Rect {
     return if (scalingLogic == ScalingLogic.FIT) {
         val srcAspect = srcWidth.toFloat() / srcHeight.toFloat()
         val dstAspect = dstWidth.toFloat() / dstHeight.toFloat()
