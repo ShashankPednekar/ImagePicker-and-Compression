@@ -89,11 +89,9 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
 
         val takePhotoIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, setImageUri())
-        takePhotoIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        takePhotoIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
 
         intentList = addIntentsToList(this, intentList, pickIntent)
-        intentList = addIntentsToList(this, intentList, takePhotoIntent, imageUri)
+        intentList = addIntentsToList(this, intentList, takePhotoIntent)
 
         if (intentList.size > 0) {
             chooserIntent = Intent.createChooser(
@@ -130,18 +128,11 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
     private fun addIntentsToList(
         context: Context,
         list: MutableList<Intent>,
-        intent: Intent,
-        uri: Uri? = null
+        intent: Intent
     ): MutableList<Intent> {
-        val resInfo = context.getPackageManager().queryIntentActivities(intent, 0)
+        val resInfo = context.packageManager.queryIntentActivities(intent, 0)
         for (resolveInfo in resInfo) {
             val packageName = resolveInfo.activityInfo.packageName
-            if (uri != null)
-                context.grantUriPermission(
-                    packageName,
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
             val targetedIntent = Intent(intent)
             targetedIntent.setPackage(packageName)
             list.add(targetedIntent)
@@ -163,12 +154,6 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
             progressBar.visibility = View.VISIBLE
 
-            val file = File(imageUri?.path ?: "")
-            val size = withContext(Dispatchers.IO) {
-                delay(1000)
-                file.length()
-            }
-            Log.d(tag, "Image File length $size")
             if (data?.data != null) {     //Photo from gallery
                 imageUri = data.data
                 queryImageUrl = imageUri?.path!!
