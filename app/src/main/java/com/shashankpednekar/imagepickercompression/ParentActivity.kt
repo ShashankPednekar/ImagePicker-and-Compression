@@ -3,14 +3,11 @@ package com.shashankpednekar.imagepickercompression
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
 @SuppressLint("Registered")
-open class ParentActivity : AppCompatActivity {
-    constructor() : super()
-    constructor(@LayoutRes contentLayoutId: Int) : super(contentLayoutId)
+open class ParentActivity : AppCompatActivity() {
 
     fun isPermissionsAllowed(permissions: Array<String>, shouldRequestIfNotAllowed: Boolean = false, requestCode: Int = -1): Boolean {
         var isGranted = true

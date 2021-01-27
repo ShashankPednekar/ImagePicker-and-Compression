@@ -9,17 +9,17 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Parcelable
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.shashankpednekar.imagepickercompression.BuildConfig
+import com.shashankpednekar.imagepickercompression.BuildConfig.APPLICATION_ID
 import com.shashankpednekar.imagepickercompression.ParentActivity
 import com.shashankpednekar.imagepickercompression.R
+import com.shashankpednekar.imagepickercompression.databinding.ActivityMainBinding
 import com.shashankpednekar.imagepickercompression.utils.compressImageFile
-import kotlinx.android.synthetic.main.activity_main.*
+
 import kotlinx.coroutines.*
 import java.io.File
 import java.util.ArrayList
@@ -27,17 +27,20 @@ import java.util.ArrayList
 private const val REQ_CAPTURE = 100
 private const val RES_IMAGE = 100
 
-class MainActivity : ParentActivity(R.layout.activity_main) {
+class MainActivity : ParentActivity() {
     private var queryImageUrl: String = ""
     private val tag = javaClass.simpleName
     private var imgPath: String = ""
     private var imageUri: Uri? = null
     private val permissions = arrayOf(Manifest.permission.CAMERA)
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        btn_capture.setOnClickListener {
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+        binding.btnCapture.setOnClickListener {
             if (isPermissionsAllowed(permissions, true, REQ_CAPTURE)) {
                 chooseImage()
             }
@@ -117,7 +120,7 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         file.createNewFile()
         imageUri = FileProvider.getUriForFile(
             this,
-            BuildConfig.APPLICATION_ID + getString(R.string.file_provider_name),
+            APPLICATION_ID + getString(R.string.file_provider_name),
             file
         )
         imgPath = file.absolutePath
@@ -143,7 +146,7 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
     private fun handleImageRequest(data: Intent?) {
         val exceptionHandler = CoroutineExceptionHandler { _, t ->
             t.printStackTrace()
-            progressBar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
             Toast.makeText(
                 this,
                 t.localizedMessage ?: getString(R.string.some_err),
@@ -152,7 +155,7 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         }
 
         GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
-            progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.VISIBLE
 
             if (data?.data != null) {     //Photo from gallery
                 imageUri = data.data
@@ -171,9 +174,9 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
                     .load(queryImageUrl)
-                    .into(iv_img)
+                    .into(binding.ivImg)
             }
-            progressBar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
         }
 
     }
