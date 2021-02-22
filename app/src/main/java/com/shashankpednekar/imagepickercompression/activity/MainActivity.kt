@@ -2,8 +2,10 @@ package com.shashankpednekar.imagepickercompression.activity
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -11,76 +13,52 @@ import android.os.Parcelable
 import android.provider.MediaStore
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.shashankpednekar.imagepickercompression.BuildConfig.APPLICATION_ID
-import com.shashankpednekar.imagepickercompression.ParentActivity
+import com.shashankpednekar.imagepickercompression.BuildConfig
 import com.shashankpednekar.imagepickercompression.R
 import com.shashankpednekar.imagepickercompression.databinding.ActivityMainBinding
 import com.shashankpednekar.imagepickercompression.utils.compressImageFile
-
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.util.ArrayList
 
-private const val REQ_CAPTURE = 100
-private const val RES_IMAGE = 100
+class MainActivity : AppCompatActivity() {
 
-class MainActivity : ParentActivity() {
     private var queryImageUrl: String = ""
-    private val tag = javaClass.simpleName
     private var imgPath: String = ""
     private var imageUri: Uri? = null
-    private val permissions = arrayOf(Manifest.permission.CAMERA)
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
         binding.btnCapture.setOnClickListener {
-            if (isPermissionsAllowed(permissions, true, REQ_CAPTURE)) {
-                chooseImage()
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            REQ_CAPTURE -> {
-                if (isAllPermissionsGranted(grantResults)) {
-                    chooseImage()
-                } else {
-                    Toast.makeText(
+            when {
+                ContextCompat.checkSelfPermission(
                         this,
-                        getString(R.string.permission_not_granted),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    chooseImage()
                 }
+                shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> showRationale()
+                else -> requestCameraPermission.launch(Manifest.permission.CAMERA)
             }
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            RES_IMAGE -> {
-                if (resultCode == Activity.RESULT_OK) {
-                    handleImageRequest(data)
-                }
-            }
-        }
-    }
 
     private fun chooseImage() {
-        startActivityForResult(getPickImageIntent(), RES_IMAGE)
+        launchIntent.launch(getPickImageIntent())
     }
 
     private fun getPickImageIntent(): Intent? {
@@ -120,7 +98,7 @@ class MainActivity : ParentActivity() {
         file.createNewFile()
         imageUri = FileProvider.getUriForFile(
             this,
-            APPLICATION_ID + getString(R.string.file_provider_name),
+            BuildConfig.APPLICATION_ID + getString(R.string.file_provider_name),
             file
         )
         imgPath = file.absolutePath
@@ -146,7 +124,7 @@ class MainActivity : ParentActivity() {
     private fun handleImageRequest(data: Intent?) {
         val exceptionHandler = CoroutineExceptionHandler { _, t ->
             t.printStackTrace()
-            binding.progressBar.visibility = View.GONE
+            progressBar.visibility = View.GONE
             Toast.makeText(
                 this,
                 t.localizedMessage ?: getString(R.string.some_err),
@@ -155,14 +133,14 @@ class MainActivity : ParentActivity() {
         }
 
         GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
-            binding.progressBar.visibility = View.VISIBLE
+            progressBar.visibility = View.VISIBLE
 
             if (data?.data != null) {     //Photo from gallery
                 imageUri = data.data
                 queryImageUrl = imageUri?.path!!
                 queryImageUrl = compressImageFile(queryImageUrl, false, imageUri!!)
             } else {
-                queryImageUrl = imgPath ?: ""
+                queryImageUrl = imgPath
                 compressImageFile(queryImageUrl, uri = imageUri!!)
             }
             imageUri = Uri.fromFile(File(queryImageUrl))
@@ -174,11 +152,38 @@ class MainActivity : ParentActivity() {
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
                     .load(queryImageUrl)
-                    .into(binding.ivImg)
+                    .into(iv_img)
             }
-            binding.progressBar.visibility = View.GONE
+            progressBar.visibility = View.GONE
         }
-
     }
+
+    private fun showRationale() {
+        AlertDialog.Builder(this)
+                .setMessage("Permission required for Bluetooth")
+                .setPositiveButton(
+                        "Allow"
+                ) { dialog, button ->
+                    requestCameraPermission.launch(Manifest.permission.BLUETOOTH)
+                }
+                .setNegativeButton(
+                        "Deny"
+                ) { dialog, button -> }
+                .show()
+    }
+
+    private val requestCameraPermission =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (isGranted) {
+                    chooseImage()
+                }
+            }
+
+    private val launchIntent =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    handleImageRequest(result.data)
+                }
+            }
 
 }
