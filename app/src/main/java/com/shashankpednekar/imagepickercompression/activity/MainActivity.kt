@@ -23,7 +23,6 @@ import com.shashankpednekar.imagepickercompression.BuildConfig
 import com.shashankpednekar.imagepickercompression.R
 import com.shashankpednekar.imagepickercompression.databinding.ActivityMainBinding
 import com.shashankpednekar.imagepickercompression.utils.compressImageFile
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.util.ArrayList
@@ -105,7 +104,6 @@ class MainActivity : AppCompatActivity() {
         return imageUri!!
     }
 
-
     private fun addIntentsToList(
         context: Context,
         list: MutableList<Intent>,
@@ -124,7 +122,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleImageRequest(data: Intent?) {
         val exceptionHandler = CoroutineExceptionHandler { _, t ->
             t.printStackTrace()
-            progressBar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
             Toast.makeText(
                 this,
                 t.localizedMessage ?: getString(R.string.some_err),
@@ -133,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
-            progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.VISIBLE
 
             if (data?.data != null) {     //Photo from gallery
                 imageUri = data.data
@@ -152,19 +150,19 @@ class MainActivity : AppCompatActivity() {
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
                     .load(queryImageUrl)
-                    .into(iv_img)
+                    .into(binding.ivImg)
             }
-            progressBar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
         }
     }
 
     private fun showRationale() {
         AlertDialog.Builder(this)
-                .setMessage("Permission required for Bluetooth")
+                .setMessage("Permission required for Camera")
                 .setPositiveButton(
                         "Allow"
                 ) { dialog, button ->
-                    requestCameraPermission.launch(Manifest.permission.BLUETOOTH)
+                    requestCameraPermission.launch(Manifest.permission.CAMERA)
                 }
                 .setNegativeButton(
                         "Deny"
