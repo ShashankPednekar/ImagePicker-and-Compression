@@ -42,16 +42,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(view)
 
         binding.btnCapture.setOnClickListener {
-            when {
-                ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED -> {
                     chooseImage()
-                }
-                shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> showRationale()
-                else -> requestCameraPermission.launch(Manifest.permission.CAMERA)
-            }
         }
     }
 
@@ -155,27 +146,6 @@ class MainActivity : AppCompatActivity() {
             binding.progressBar.visibility = View.GONE
         }
     }
-
-    private fun showRationale() {
-        AlertDialog.Builder(this)
-                .setMessage("Permission required for Camera")
-                .setPositiveButton(
-                        "Allow"
-                ) { dialog, button ->
-                    requestCameraPermission.launch(Manifest.permission.CAMERA)
-                }
-                .setNegativeButton(
-                        "Deny"
-                ) { dialog, button -> }
-                .show()
-    }
-
-    private val requestCameraPermission =
-            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (isGranted) {
-                    chooseImage()
-                }
-            }
 
     private val launchIntent =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
