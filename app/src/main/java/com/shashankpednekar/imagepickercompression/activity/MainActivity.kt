@@ -2,82 +2,53 @@ package com.shashankpednekar.imagepickercompression.activity
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.Parcelable
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.shashankpednekar.imagepickercompression.BuildConfig
-import com.shashankpednekar.imagepickercompression.ParentActivity
 import com.shashankpednekar.imagepickercompression.R
+import com.shashankpednekar.imagepickercompression.databinding.ActivityMainBinding
 import com.shashankpednekar.imagepickercompression.utils.compressImageFile
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.util.ArrayList
 
-private const val REQ_CAPTURE = 100
-private const val RES_IMAGE = 100
+class MainActivity : AppCompatActivity() {
 
-class MainActivity : ParentActivity(R.layout.activity_main) {
     private var queryImageUrl: String = ""
-    private val tag = javaClass.simpleName
     private var imgPath: String = ""
     private var imageUri: Uri? = null
-    private val permissions = arrayOf(Manifest.permission.CAMERA)
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        btn_capture.setOnClickListener {
-            if (isPermissionsAllowed(permissions, true, REQ_CAPTURE)) {
-                chooseImage()
-            }
-        }
-    }
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            REQ_CAPTURE -> {
-                if (isAllPermissionsGranted(grantResults)) {
+        binding.btnCapture.setOnClickListener {
                     chooseImage()
-                } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.permission_not_granted),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            RES_IMAGE -> {
-                if (resultCode == Activity.RESULT_OK) {
-                    handleImageRequest(data)
-                }
-            }
-        }
-    }
 
     private fun chooseImage() {
-        startActivityForResult(getPickImageIntent(), RES_IMAGE)
+        launchIntent.launch(getPickImageIntent())
     }
 
     private fun getPickImageIntent(): Intent? {
@@ -124,7 +95,6 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         return imageUri!!
     }
 
-
     private fun addIntentsToList(
         context: Context,
         list: MutableList<Intent>,
@@ -143,7 +113,7 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
     private fun handleImageRequest(data: Intent?) {
         val exceptionHandler = CoroutineExceptionHandler { _, t ->
             t.printStackTrace()
-            progressBar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
             Toast.makeText(
                 this,
                 t.localizedMessage ?: getString(R.string.some_err),
@@ -152,14 +122,14 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
         }
 
         GlobalScope.launch(Dispatchers.Main + exceptionHandler) {
-            progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.VISIBLE
 
             if (data?.data != null) {     //Photo from gallery
                 imageUri = data.data
                 queryImageUrl = imageUri?.path!!
                 queryImageUrl = compressImageFile(queryImageUrl, false, imageUri!!)
             } else {
-                queryImageUrl = imgPath ?: ""
+                queryImageUrl = imgPath
                 compressImageFile(queryImageUrl, uri = imageUri!!)
             }
             imageUri = Uri.fromFile(File(queryImageUrl))
@@ -171,11 +141,17 @@ class MainActivity : ParentActivity(R.layout.activity_main) {
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
                     .load(queryImageUrl)
-                    .into(iv_img)
+                    .into(binding.ivImg)
             }
-            progressBar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
         }
-
     }
+
+    private val launchIntent =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    handleImageRequest(result.data)
+                }
+            }
 
 }

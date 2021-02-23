@@ -17,6 +17,7 @@ import java.util.*
 
 private const val tag = "FileUtils"
 
+@Suppress("BlockingMethodInNonBlockingContext")
 suspend fun Activity.compressImageFile(
     path: String,
     shouldOverride: Boolean = true,
